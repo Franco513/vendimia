@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login Administrador - Vendimia</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="login-container">
+    <h2>Administrador</h2>
+    <form id="loginForm">
+      <input type="text" id="usuario" placeholder="Usuario" required />
+      <input type="password" id="password" placeholder="Contraseña" required />
+      <button type="submit">Entrar</button>
+    </form>
+    <p id="errorMsg" class="error"></p>
+  </div>
+
+  <script>
+    const form = document.getElementById('loginForm');
+    const errorMsg = document.getElementById('errorMsg');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorMsg.textContent = '';
+
+      const usuario = document.getElementById('usuario').value.trim();
+      const password = document.getElementById('password').value.trim();
+
+      try {
+        const res = await fetch('http://localhost:3000/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ usuario, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          // Guardar token en localStorage
+          localStorage.setItem('token', data.token);
+          // Redirigir al panel
+          window.location.href = 'panel.html';
+        } else {
+          errorMsg.textContent = data.error || 'Error en el login';
+        }
+      } catch (error) {
+        errorMsg.textContent = 'Error de conexión';
+      }
+    });
+  </script>
+</body>
+</html>
