@@ -1,0 +1,213 @@
+/* === Estilo general con fondo === */
+body {
+  font-family: Arial, sans-serif;
+  background: url('https://media.istockphoto.com/id/645825638/es/foto/filas-del-barril-en-una-bodega.jpg?s=612x612&w=0&k=20&c=4B8G7bq_yDrjx4HpfnaNz3tgltnPk33SUL9CPWnkPQc=') no-repeat center center fixed;
+  background-size: cover;
+  padding: 20px;
+  margin: 0;
+  color: #fff;
+}
+
+/* === Contenedores === */
+.panel-container {
+  max-width: 900px;
+  margin: 40px auto;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+  position: relative; /* para botón cerrar sesión */
+}
+
+.login-container {
+  max-width: 450px; /* ancho más reducido */
+  margin: 40px auto;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+}
+
+/* === Títulos === */
+h2, h3 {
+  text-align: center;
+  color: #8B0000;
+}
+
+/* === Inputs, botones, selects, etiquetas === */
+input,
+select,
+label,
+button {
+  width: 100%;
+  margin: 8px 0;
+  padding: 10px;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+select {
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+/* Select múltiple */
+select[size],
+.content-area select[size] {
+  max-height: 200px;
+  min-height: 120px;
+  overflow-y: auto;
+  font-size: 1rem;
+  display: block;
+  transition: all 0.2s ease;
+}
+
+/* === Botones === */
+button {
+  cursor: pointer;
+  background-color: #8B0000;
+  border: none;
+  color: white;
+  border-radius: 6px;
+  transition: background-color 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+button:hover {
+  background-color: #a30000;
+}
+
+/* Botón eliminar */
+.btnEliminar {
+  background-color: #d32f2f;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+}
+
+.btnEliminar:hover {
+  background-color: #b71c1c;
+}
+
+/* Botón activo */
+.buttons button.activo {
+  background-color: #004d16 !important;
+  color: #fff;
+  font-weight: bold;
+  box-shadow: 0 0 5px #004a4d;
+}
+
+/* Botón cerrar sesión en la esquina superior derecha */
+#btnLogout {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: auto;
+  padding: 8px 16px;
+  background-color: #80848a !important;
+  color: white;
+  z-index: 999;
+}
+
+/* === Área dinámica === */
+.content-area {
+  margin-top: 20px;
+}
+
+.content-area form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 100%;
+}
+
+/* === Tablas === */
+.table-wrapper {
+  overflow-x: auto;
+  margin-top: 10px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  word-wrap: break-word;
+  font-size: 0.95rem;
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+  max-width: 150px;
+  overflow-wrap: break-word;
+  color: #333;
+}
+
+th {
+  background-color: #8B0000;
+  color: white;
+}
+
+tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+tbody tr:hover {
+  background-color: #f1f1f1;
+}
+
+/* === Mensajes === */
+#msgRegistrar,
+#msgCompra {
+  margin-top: 10px;
+  text-align: center;
+  font-weight: bold;
+  color: #333;
+}
+
+/* === Responsive === */
+@media (max-width: 768px) {
+  .panel-container,
+  .login-container {
+    padding: 15px;
+  }
+
+  h2, h3 {
+    font-size: 1.5rem;
+  }
+
+  input, select, button {
+    font-size: 0.95rem;
+  }
+
+  .buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .buttons button {
+    flex: 1 1 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  table th, table td {
+    font-size: 0.85rem;
+    padding: 8px;
+  }
+
+  .content-area form {
+    gap: 8px;
+  }
+}

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Panel Administrador - Vendimia</title>
+  <link rel="stylesheet" href="style.css" />
+
+</head>
+<body>
+  <div class="panel-container">
+    <h2>Administrador</h2>
+    <div class="buttons">
+      <button type="button" id="btnRegistrar">Registrar Cliente</button>
+      <button type="button" id="btnListado">Listado de Clientes</button>
+      <button type="button" id="btnCompra">Registrar Compra</button>
+      <button type="button" id="btnHistorial">Historial de Compras</button>
+      <button type="button" id="btnLogout" style="background:#f44336; color:white;">Cerrar sesión</button>
+    </div>
+
+    <div id="content" class="content-area">
+      <!-- Aquí cargaremos las funcionalidades -->
+    </div>
+  </div>
+
+  <script>
+    function activarBotonActual(botonPresionado) {
+      const botones = document.querySelectorAll('.buttons button');
+      botones.forEach(btn => btn.classList.remove('activo'));
+      botonPresionado.classList.add('activo');
+    }
+
+    // Función para cambiar contenido con transición suave
+    async function cambiarContenido(contenidoHTML) {
+      content.classList.add('fade-out');
+      await new Promise(resolve => setTimeout(resolve, )); // espera transición
+
+      content.innerHTML = contenidoHTML;
+
+      content.classList.remove('fade-out');
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = 'index.html';
+    }
+
+    const content = document.getElementById('content');
+    const btnRegistrar = document.getElementById('btnRegistrar');
+    const btnListado = document.getElementById('btnListado');
+    const btnHistorial = document.getElementById('btnHistorial');
+    const btnCompra = document.getElementById('btnCompra');
+    const btnLogout = document.getElementById('btnLogout');
+
+    btnLogout.addEventListener('click', () => {
+      localStorage.removeItem('token');
+      window.location.href = 'index.html';
+    });
+
+    btnRegistrar.addEventListener('click', async () => {
+      activarBotonActual(btnRegistrar);
+      await cambiarContenido(`
+        <h3>Registrar Cliente</h3>
+        <form id="formRegistrar">
+          <input type="text" id="nombre" placeholder="Nombre" required />
+          <input type="text" id="apellido" placeholder="Apellido" required />
+          <input type="email" id="correo" placeholder="Correo electrónico" required />
+          <input type="tel" id="telefono" placeholder="Número de teléfono" required />
+          <button type="submit">Registrar</button>
+        </form>
+        <p id="msgRegistrar"></p>
+      `);
+
+      const formRegistrar = document.getElementById('formRegistrar');
+      const msgRegistrar = document.getElementById('msgRegistrar');
+
+      formRegistrar.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        msgRegistrar.textContent = '';
+
+        const nombre = document.getElementById('nombre').value.trim();
+        const apellido = document.getElementById('apellido').value.trim();
+        const correo = document.getElementById('correo').value.trim();
+        const telefono = document.getElementById('telefono').value.trim();
+
+        try {
+          const res = await fetch('http://localhost:3000/api/clientes', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({ nombre, apellido, correo, telefono })
+          });
+          const data = await res.json();
+          if (res.ok) {
+            msgRegistrar.style.color = 'green';
+            msgRegistrar.textContent = 'Cliente registrado con éxito.';
+            formRegistrar.reset();
+            btnListado.click();
+          } else {
+            msgRegistrar.style.color = 'red';
+            msgRegistrar.textContent = data.error || 'Error al registrar cliente.';
+          }
+        } catch {
+          msgRegistrar.style.color = 'red';
+          msgRegistrar.textContent = 'Error de conexión.';
+        }
+      });
+    });
+
+    btnListado.addEventListener('click', async () => {
+      activarBotonActual(btnListado);
+      await cambiarContenido('<h3>Listado de Clientes</h3><p>Cargando...</p>');
+
+      try {
+        const res = await fetch('http://localhost:3000/api/clientes', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+
+        const clientes = await res.json();
+        if (!res.ok) {
+          await cambiarContenido(`<p style="color:red;">${clientes.error || 'Error al cargar clientes'}</p>`);
+          return;
+        }
+
+        let html = `
+          <label for="buscadorClientes">Buscar Cliente:</label>
+          <input type="text" id="buscadorClientes" placeholder="Buscar por nombre o apellido" style="width:100%; padding:8px; margin-bottom:12px; font-size:1rem;" />
+          <div class="table-wrapper">
+            <table id="tablaClientes">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Apellido</th>
+                  <th>Correo</th>
+                  <th>Teléfono</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+        `;
+
+        clientes.forEach(c => {
+          html += `
+            <tr>
+              <td>${c.nombre}</td>
+              <td>${c.apellido}</td>
+              <td>${c.correo}</td>
+              <td>${c.telefono || '-'}</td>
+              <td><button data-id="${c.id}" class="btnEliminar">Eliminar</button></td>
+            </tr>
+          `;
+        });
+
+        html += `</tbody></table></div>`;
+        await cambiarContenido(html);
+
+        document.getElementById('buscadorClientes').addEventListener('input', (e) => {
+          const filtro = e.target.value.toLowerCase();
+          document.querySelectorAll('#tablaClientes tbody tr').forEach(fila => {
+            const nombre = (fila.cells[0].textContent + ' ' + fila.cells[1].textContent).toLowerCase();
+            fila.style.display = nombre.includes(filtro) ? '' : 'none';
+          });
+        });
+
+        document.querySelectorAll('.btnEliminar').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const id = btn.getAttribute('data-id');
+            if (confirm('¿Seguro que quieres eliminar este cliente?')) {
+              try {
+                const res = await fetch(`http://localhost:3000/api/clientes/${id}`, {
+                  method: 'DELETE',
+                  headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                  alert('Cliente eliminado');
+                  btnListado.click();
+                } else {
+                  alert(data.error || 'Error al eliminar cliente');
+                }
+              } catch {
+                alert('Error de conexión');
+              }
+            }
+          });
+        });
+
+      } catch {
+        await cambiarContenido('<p style="color:red;">Error de conexión</p>');
+      }
+    });
+
+    btnHistorial.addEventListener('click', async () => {
+      activarBotonActual(btnHistorial);
+      await cambiarContenido('<h3>Historial de Compras</h3><p>Cargando...</p>');
+
+      try {
+        const res = await fetch('http://localhost:3000/api/compras/historial', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+
+        const historial = await res.json();
+        if (!res.ok) {
+          await cambiarContenido(`<p style="color:red;">${historial.error || 'Error al cargar historial'}</p>`);
+          return;
+        }
+
+        let html = `
+          <label for="buscadorHistorial">Buscar Cliente:</label>
+          <input type="text" id="buscadorHistorial" placeholder="Buscar por nombre o apellido" style="width: 100%; padding: 8px; margin-bottom: 12px; font-size: 1rem;" />
+          <div class="table-wrapper">
+            <table id="tablaHistorial">
+              <thead>
+                <tr>
+                  <th>Cliente</th>
+                  <th>Total Botellas</th>
+                  <th>Compras Realizadas</th>
+                </tr>
+              </thead>
+              <tbody>
+        `;
+
+        historial.forEach(h => {
+          html += `<tr>
+            <td>${h.nombre} ${h.apellido}</td>
+            <td>${h.total_botellas || 0}</td>
+            <td>${h.compras_realizadas || 0}</td>
+          </tr>`;
+        });
+
+        html += '</tbody></table></div>';
+        await cambiarContenido(html);
+
+        document.getElementById('buscadorHistorial').addEventListener('input', (e) => {
+          const filtro = e.target.value.toLowerCase();
+          document.querySelectorAll('#tablaHistorial tbody tr').forEach(fila => {
+            const nombre = fila.cells[0].textContent.toLowerCase();
+            fila.style.display = nombre.includes(filtro) ? '' : 'none';
+          });
+        });
+
+      } catch {
+        await cambiarContenido('<p style="color:red;">Error de conexión</p>');
+      }
+    });
+
+    btnCompra.addEventListener('click', async () => {
+      activarBotonActual(btnCompra);
+      await cambiarContenido('<h3>Registrar Compra</h3><p>Cargando clientes...</p>');
+
+      try {
+        const res = await fetch('http://localhost:3000/api/clientes', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+
+        const clientes = await res.json();
+        if (!res.ok) {
+          await cambiarContenido(`<p style="color:red;">${clientes.error || 'Error al cargar clientes'}</p>`);
+          return;
+        }
+
+        await cambiarContenido(`
+          <form id="formCompra">
+            <label>Buscar Cliente:</label>
+            <input type="text" id="buscadorCliente" placeholder="Buscar por nombre o apellido" />
+            <label>Seleccionar Cliente:</label>
+            <select id="cliente_id" required size="6" style="width:100%;"></select>
+            <input type="number" id="cantidad" placeholder="Cantidad de botellas" min="1" required />
+            <button type="submit">Registrar Compra</button>
+          </form>
+          <p id="msgCompra"></p>
+        `);
+
+        const selectClientes = document.getElementById('cliente_id');
+        const buscadorCliente = document.getElementById('buscadorCliente');
+        const formCompra = document.getElementById('formCompra');
+        const msgCompra = document.getElementById('msgCompra');
+
+        function actualizarOpciones(filtro = '') {
+          selectClientes.innerHTML = '';
+          clientes
+            .filter(c => (`${c.nombre} ${c.apellido}`).toLowerCase().includes(filtro.toLowerCase()))
+            .forEach(c => {
+              const option = document.createElement('option');
+              option.value = c.id;
+              option.textContent = `${c.nombre} ${c.apellido}`;
+              selectClientes.appendChild(option);
+            });
+        }
+
+        actualizarOpciones();
+        buscadorCliente.addEventListener('input', () => actualizarOpciones(buscadorCliente.value));
+
+        formCompra.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          msgCompra.textContent = '';
+
+          const cliente_id = selectClientes.value;
+          const cantidad = document.getElementById('cantidad').value;
+
+          try {
+            const res = await fetch('http://localhost:3000/api/compras', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+              },
+              body: JSON.stringify({ cliente_id, cantidad })
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+              msgCompra.style.color = 'green';
+              msgCompra.textContent = 'Compra registrada correctamente.';
+              formCompra.reset();
+              actualizarOpciones();
+            } else {
+              msgCompra.style.color = 'red';
+              msgCompra.textContent = data.error || 'Error al registrar compra.';
+            }
+          } catch {
+            msgCompra.style.color = 'red';
+            msgCompra.textContent = 'Error de conexión.';
+          }
+        });
+      } catch {
+        await cambiarContenido('<p style="color:red;">Error de conexión al cargar clientes</p>');
+      }
+    });
+  </script>
+</body>
+</html>
