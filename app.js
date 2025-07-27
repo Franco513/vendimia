@@ -18,6 +18,11 @@ app.use('/api/auth', authRoutes);
 app.use('/api/clientes', clientesRoutes);
 app.use('/api/compras', comprasRoutes);
 
+// Ruta raíz para prueba
+app.get('/', (req, res) => {
+  res.send('¡Servidor backend funcionando correctamente!');
+});
+
 app.listen(port, () => {
   console.log(`Servidor escuchando en puerto ${port}`);
 });
